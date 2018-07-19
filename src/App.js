@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
-let defaultTextColor = '#000';
+let defaultStyle = {
+  color: '#fff'
+};
 let fakeServerData = {
     user: {
         name: 'Bob',
@@ -42,11 +43,11 @@ let fakeServerData = {
 class PlaylistCounter extends Component {
     render() {
         return (
-        <div style={{width: "40%", display: 'inline-block'}}>
-            <h2>{this.props.playlists.length} playlists</h2>
-        </div>
-        );
-    }
+      <div style={{...defaultStyle, width: "40%", display: 'inline-block'}}>
+        <h2>{this.props.playlists.length} playlists</h2>
+      </div>
+    );
+  }
 }
 
 class HoursCounter extends Component {
@@ -58,7 +59,7 @@ class HoursCounter extends Component {
             return sum + eachSong.duration
         }, 0)
         return (
-        <div style={{width: "40%", display: 'inline-block'}}>
+        <div style={{...defaultStyle, width: "40%", display: 'inline-block'}}>
             <h2>{Math.round(totalDuration/60)} hours</h2>
         </div>
         );
@@ -68,10 +69,9 @@ class HoursCounter extends Component {
 class Filter extends Component {
     render() {
         return (
-            <div>
+            <div style={defaultStyle}>
                 <img/>
-                <input type="text"/>
-                Filter
+                <input type="text" onKeyUp={event => this.props.onTextChange(event.target.value)}/>
             </div>
         );
     }
@@ -79,13 +79,13 @@ class Filter extends Component {
 
 class Playlist extends Component {
     render() {
-        let playlists = this.props.playlists
+        let playlist = this.props.playlist
         return (
-        <div style={{color: defaultTextColor, display: 'inline-block', width: "25%"}}>
+        <div style={{...defaultStyle, display: 'inline-block', width: "25%"}}>
             <img />
-            <h3>{playlists.name}</h3>
+            <h3>{playlist.name}</h3>
             <ul>
-                {playlists.songs.map(songs =>
+                {playlist.songs.map(songs =>
                 <li>{songs.name}</li>
                 )}
             </ul>
@@ -97,7 +97,10 @@ class Playlist extends Component {
 class App extends Component {
 constructor() {
     super();
-    this.state = {serverData: {}}
+    this.state = {
+        serverData: {},
+        filterString: ''
+    }
 }
   componentDidMount() {
       setTimeout(() => {
@@ -105,26 +108,30 @@ constructor() {
       }, 1000);
   }
   render() {
+    let playlistToRender = this.state.serverData.user ? this.state.serverData.user.playlists
+      .filter(playlist =>
+        playlist.name.toLowerCase().includes(
+          this.state.filterString.toLowerCase())
+    ) : []
     return (
       <div className="App">
         {this.state.serverData.user ?
         <div>
-        <h1 style={{ 'font-size': '54px'}}>{this.state.serverData.user.name}'s Playlists</h1>
-
-        <PlaylistCounter playlists={                                     this.state.serverData.user.playlists}/>
-        <HoursCounter playlists={                                     this.state.serverData.user.playlists}/>
-
-        <Filter/>
-        {this.state.serverData.user.playlists.map(playlists =>
-        <Playlist playlists={playlists}/>
-        )}
-
-
-      </div> : <h1>Loading...</h1>
+          <h1 style={{...defaultStyle, 'font-size': '54px'}}>
+            {this.state.serverData.user.name}'s Playlists
+          </h1>
+          <PlaylistCounter playlists={playlistToRender}/>
+          <HoursCounter playlists={playlistToRender}/>
+          <Filter onTextChange={text => {
+              this.setState({filterString: text})
+            }}/>
+          {playlistToRender.map(playlist =>
+            <Playlist playlist={playlist} />
+          )}
+        </div> : <h1 style={defaultStyle}>Loading...</h1>
         }
-    </div>
+      </div>
     );
   }
 }
-
 export default App;
